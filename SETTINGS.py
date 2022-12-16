@@ -31,7 +31,7 @@ EXPERIMENTS = {
           "run_avg" : 240,
           "sampleweight" : None
     },
-    "smalltrial" : { #STOPPED AT 111, reset to 101
+    "smalltrial" : {
         "experiment" : "smalltrial",
           "seed" : 300,
           "CNN_blocks" : [1, 1],
