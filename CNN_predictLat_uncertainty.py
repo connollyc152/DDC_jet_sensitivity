@@ -1,5 +1,4 @@
 import tensorflow as tf
-import scipy.stats as stats
 import netCDF4 as nc
 import numpy as np
 import matplotlib.pyplot as plt
@@ -151,56 +150,6 @@ def compile_model(x_train, x_train2, y_train, settings):
     
     return model
 
-def plot_pits(x_val, onehot_val, model_shash):
-    plt.sca(ax)
-    clr_shash = 'tab:blue'
-    # shash pit
-    bins, hist_shash, D_shash, EDp_shash = compute_pit(onehot_val, x_data=x_val,model_shash=model_shash)
-    bins_inc = bins[1]-bins[0]
-    bin_add = bins_inc/2
-    bin_width = bins_inc*.98
-    plt.bar(hist_shash[1][:-1] + bin_add,
-              hist_shash[0],
-              width=bin_width,
-              color=clr_shash,
-              label='SHASH',
-            )
-    # make the figure pretty
-    plt.axhline(y=.1,
-                linestyle='--',
-                color='k',
-                linewidth=2.,
-                )
-    yticks = np.around(np.arange(0,1,.05),2)
-    plt.yticks(yticks,yticks)
-    plt.xticks(bins,np.around(bins,1))
-    plt.text(0.,np.max(plt.ylim())*.99,
-              'SHASH D: ' + str(np.round(D_shash,4)) + ' (' + str(np.round(EDp_shash,3)) +  ')',
-              color=clr_shash,
-              verticalalignment='top',
-              fontsize=12)
-    plt.xlabel('probability integral transform')
-    plt.ylabel('probability')
-
-def compute_pit(onehot_data, x_data=None, model_shash = None):
-    bins = np.linspace(0, 1, 11)
-    # bins_inc = bins[1]-bins[0]
-    shash_pred = model_shash.predict(x_data)
-    mu_pred = shash_pred[:,0]
-    sigma_pred = shash_pred[:,1]
-    norm_dist = tfp.distributions.Normal(mu_pred,sigma_pred)
-    F = norm_dist.cdf(onehot_data)
-    pit_hist = np.histogram(F,
-                              bins,
-                              weights=np.ones_like(F)/float(len(F)),
-                             )
-    # pit metric from Bourdin et al. (2014) and Nipen and Stull (2011)
-    # compute expected deviation of PIT for a perfect forecast
-    B   = len(pit_hist[0])
-    D   = np.sqrt(1/B * np.sum( (pit_hist[0] - 1/B)**2 ))
-    EDp = np.sqrt( (1.-1/B) / (onehot_data.shape[0]*B) )
-    return bins, pit_hist, D, EDp
-
 def HistogramWHeightNormBySample(AO, error, bins_n, title, label):
     mini = np.min(AO)
     maxi = np.max(AO)
@@ -240,7 +189,7 @@ def CreateAverageDeltaArray(bins, n, init_state):
      
 ####################3
 modelsavepath = "/Users/cconn/Documents/DDC_jetsensitivity_CNN/CNN/models/"
-experiment = ["smalltrial"]
+experiment = ["FINAL_data"]
 
 for exp in experiment:
     expsettings = settings[exp]
@@ -388,7 +337,6 @@ for exp in experiment:
 
     plt.figure(figsize=(6.5,6))
     plt.plot(dataOutTesto ,yTrainPredValue,'o',markersize=1, label='training', color = "blue")
-    print(stats.linregress(dataOutTesto, yTrainPredValue))
     plt.plot([-10,10],[-10,10], color = 'gray')
     plt.ylim(-10,10)
     plt.xlim(-10,10)
@@ -411,6 +359,3 @@ for exp in experiment:
     plt.ylabel('prediction')
     plt.show()
     
-
-    plot_pits([dataInTestostand,AO_labelsTostand], dataOutTestostad, model)
-    plt.show()

@@ -13,7 +13,15 @@ Code was written in matplotlib 3.5.1, netcdf4 1.5.7, numpy 1.21.4, python 3.7.7,
 
 **SETTINGS.py** : holds the settings for the convolutional neural network
 
+**CNN_predictLat_uncertainty.py** : Code used to train the CNN.
+
+**CNN_predictLat_uncertainty_data.py** : Code used to train the CNN that works with available data.
+
+**CNN_model.h5** : CNN model
+
 **AnalyzeModels/main.py** : main script used to evaluate the trained network. Makes all subplots in (DOI/link). Calls Plots.py and PredictedPlots.py to create figures.
+
+**AnalyzeModels/main_data.py** : main script used to evaluate the trained network. Unlike main.py, this file works easily with available data. Makes all subplots in (DOI/link). Calls Plots.py and PredictedPlots.py to create figures.
 
 **AnalyzeModels/Plots.py** : Holds functions used to plot data
 

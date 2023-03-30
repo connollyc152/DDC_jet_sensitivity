@@ -11,15 +11,14 @@ import math as m
 import matplotlib.cm as cm
 
 import sys
-sys.path.insert(0, '/Users/cconn/Documents/JetResponse_to_dTdt_PAPER/Code/AnalyzeModels')
+sys.path.insert(0, 'ADD LOCATION OF CODE')
 import Plots as p
 import PredictPlots as pp
-sys.path.insert(0, '/Users/cconn/Documents/DDC_jetsensitivity_CNN/CNN')
 import SETTINGS
 
 from scipy.odr import *
 
-data_loc = "/Users/cconn/Documents/DDC_jetsensitivity_CNN/CESM_DDC/data"
+data_loc = "CHANGE TO THE LOCATION OF THE DATA"
 
 label_font = {'fontname':'Noto Sans JP', 'size':'12', 'color':'black', 'weight':'normal',
               'verticalalignment':'bottom'}
@@ -38,7 +37,6 @@ upper = plt.cm.RdBu_r(np.linspace(0.51, 1, 49))
 colors = np.vstack((lower, white, upper))
 tmap = matplotlib.colors.LinearSegmentedColormap.from_list('terrain_map_white', colors)
 tmap_dis = matplotlib.colors.LinearSegmentedColormap.from_list('terrain_map_white', colors, N = 15)
-# tmap = cmr.guppy_r #fusion_r
 tmap_uncertainty = "bone" #cmr.savanna_r
 tmap_uncertainty_dis = cm.get_cmap(tmap_uncertainty,lut=15)
 
@@ -121,12 +119,11 @@ def DeltaAO(AO_data, lag):
     AO_array = np.array(AO_array)
     return(AO_array)
 
-n = 1000
 def OpenAndCombineFiles(files):
     f = nc.Dataset(data_loc + "/runs_averaged/OneHemisphere_run" + str(files[0]) + "Runningavg" + str(run_avg) + "_lat.nc",'r')
     print("opening file " + "OneHemisphere_run" + str(files[0]) + "Runningavg" + str(run_avg) + "_lat.nc")
-    AO = np.array(f['output_ts'][:n])
-    temp = np.array(f['de_ts'][:n,5:,:])
+    AO = np.array(f['output_ts'][:])
+    temp = np.array(f['de_ts'][:,5:,:])
     y = np.array(f['y'][:])
     pf = np.array(f['pf'][5:])
     
@@ -137,9 +134,9 @@ def OpenAndCombineFiles(files):
     for file in files[1:]:
         f = nc.Dataset(data_loc + "/runs_averaged/OneHemisphere_run" + str(file) + "Runningavg" + str(run_avg) + "_lat.nc",'r')
         print("opening file " + str(file))
-        AO = np.array(f['output_ts'][:n])
-        temp = np.array(f['de_ts'][:n,5:,:])
-
+        AO = np.array(f['output_ts'][:])
+        temp = np.array(f['de_ts'][:,5:,:])
+        
         temp_data = np.row_stack((temp_data, temp))
         AO_data = np.concatenate((AO_data, AO))
         AO_labels = np.concatenate((AO_labels, AO))
@@ -207,6 +204,7 @@ def plot_pits(x_val, onehot_val, model_shash):
 
 def compute_pit(onehot_data, x_data, model_shash):
     bins = np.linspace(0, 1, 11)
+    # bins_inc = bins[1]-bins[0]
     shash_pred = model_shash.predict(x_data)
     mu_pred = shash_pred[:,0]
     sigma_pred = shash_pred[:,1]
@@ -223,9 +221,8 @@ def compute_pit(onehot_data, x_data, model_shash):
     EDp = np.sqrt( (1.-1/B) / (onehot_data.shape[0]*B) )
     return bins, pit_hist, D, EDp
 
-
-modelsavepath = "/Users/cconn/Documents/DDC_jetsensitivity_CNN/CNN/models/"
-experiment = "smalltrial" #################################
+modelsavepath = "CHANGE TO THE PATH TO THE MODEL"
+experiment = "FINAL" #################################BEST3
 settings = SETTINGS.EXPERIMENTS[experiment]
 seed = settings['seed']
 np.random.seed(seed)
@@ -238,65 +235,58 @@ model_name = modelsavepath + settings['experiment'] + '.h5'
 new_model = tf.keras.models.load_model(model_name, custom_objects={"Exponentiate": Exponentiate, "RegressLossExpSigma": RegressLossExpSigma})
 new_model.summary()
 tf.keras.utils.plot_model(new_model, 'model.png', show_shapes=True, dpi=100)
+print("Running model " + str(model_name))
 
-ODRreg = True
+STANDARDIZING = True  #
 OPENTRAININGDATA = False
-AVERAGECHANGE = True
+AVERAGECHANGE = False
 SAVEFIGURES = False
-figuresavepath = "/Users/cconn/Documents/DDC_jetsensitivity_CNN/saved_figures/"
+figuresavepath = "CHANGE TO WHERE YOU WANT TO SAVE FIGURES"
+LINEARREGRESSION = True #
 
 ###PLOTS######
-SCATTER = True
-BASELINESCATTER = True
-SCATTERCONTOUR = True
-SCATTERUNCERTAINTY = True
+SCATTER = True # 
+BASELINESCATTER = True #
+SCATTERCONTOUR = True #
+SCATTERUNCERTAINTY = True #
 
-# PREDICTEDSIGN = True
-SAMPLELIST = True
-sample_list = [100, 300,3750,8640,1753, 1900] #list(np.arange(104,300,1)) #65672,3726,1278,9385,13098,14000
+SAMPLELIST = True #
+SAMPLELISTTRAINING = False #
+sample_list = [100, 101] #list(np.arange(104,300,1)) #65672,3726,1278,9385,13098,14000
 
-PITHISTOGRAM = True
-# BOXANDWHISKER = True
+PITHISTOGRAM = False #
 
-HISTWITHINERROR = True
-HISTERROR_BASEDONLABELS = True
-HISTERROR_BASEDONDELTAAO = True
-HISTVIOLIN = True
+HISTERROR_BASEDONLABELS = True #
+HISTERROR_BASEDONDELTAAO = True #
+HISTVIOLIN = True #
 
 ###PredictPLots##########
-GAUSSIANBLAB = True
-PULLINGSAMPLESADDGAUSIAN = True
-GAUSSIANBLABLINEAR = True
-TESTGAUSSIANS = True
+GAUSSIANBLAB = True #
+GAUSSIANBLABLINEAR = True #
 
-CNN_AE_COUNT = True
-POLESURFACESIGN = True
-PDF_OF_PREDICTED = True
-
-dataInTest, dataOutTest, AO_labelsT, y, pf = OpenAndCombineFiles([4,5,6,7,8,9,10]) #,5,6,7,8,9,10
-dataInTest2, dataOutTest2, AO_labelsT2, y, pf = OpenAndCombineFiles([14,15,16,17,18,19,110 ]) #,15,16,17,18,19,110 
-y_size = np.size(y)
-pf_size = np.size(pf)
+dataInTest, dataOutTest, AO_labelsT, y, pf = OpenAndCombineFiles([4,5,6,7,8,9,10]) 
+dataInTest2, dataOutTest2, AO_labelsT2, y, pf = OpenAndCombineFiles([14,15,16,17,18,19,110])
 dataInTest = np.row_stack((dataInTest, dataInTest2))
 dataOutTest = np.concatenate((dataOutTest, dataOutTest2))
 AO_labelsT = np.concatenate((AO_labelsT, AO_labelsT2))
 print("Amount of data currently used: " + str(np.size(AO_labelsT)))
 
-f = nc.Dataset(data_loc + "/standardize_files/standardizingFile_Nshift"+ str(Nshift) +"_"+ str(run_avg) +"runavg" + str(settings['TrainingFiles'])+ ".nc",'r')
-print("Opening " +  data_loc + "/standardize_files/standardizingFile_Nshift"+ str(Nshift) +"_"+ str(run_avg) +"runavg" + str(settings['TrainingFiles'])+ ".nc")
-AO_labels_mean, AO_labels_std, dataOut_mean, dataOut_std = f['labelmean'][0], f['labelstd'][0], f['outmean'][0], f['outstd'][0]
-in_mean, in_std = f['ts_inmean'][:,:], f['ts_instd'][:,:]
-f.close()
+perpred = np.empty(shape = (int(np.size(AO_labelsT))))
+perpred.fill(0)
+y_size = np.size(y)
+pf_size = np.size(pf)
 
-AO_labelsT_stand = (AO_labelsT - AO_labels_mean)/AO_labels_std 
-dataInTest_stand = (dataInTest - in_mean)/in_std
-dataOutTest_stand = (dataOutTest - dataOut_mean)/dataOut_std
+if STANDARDIZING:
+    f = nc.Dataset(data_loc + "/standardize_files/standardizingFile_Nshift"+ str(Nshift) +"_"+ str(run_avg) +"runavg" + str(settings['TrainingFiles'])+ ".nc",'r')
+    print("Opening " +  data_loc + "/standardize_files/standardizingFile_Nshift"+ str(Nshift) +"_"+ str(run_avg) +"runavg" + str(settings['TrainingFiles'])+ ".nc")
+    AO_labels_mean, AO_labels_std, dataOut_mean, dataOut_std = f['labelmean'][0], f['labelstd'][0], f['outmean'][0], f['outstd'][0]
+    in_mean, in_std = f['ts_inmean'][:,:], f['ts_instd'][:,:]
+    f.close()
 
-dataInTestF = dataInTest_stand.reshape(-1, pf_size, y_size, 1)
-print("PREDICTING")
-PredictedData = new_model.predict([dataInTestF,AO_labelsT_stand])
-PredictedValue = (PredictedData[:,0] * dataOut_std) + dataOut_mean
-PredictedUncertainty = PredictedData[:,1]
+    AO_labelsT_stand = (AO_labelsT - AO_labels_mean)/AO_labels_std 
+    dataInTest_stand = (dataInTest - in_mean)/in_std
+    dataOutTest_stand = (dataOutTest - dataOut_mean)/dataOut_std
+
 
 if OPENTRAININGDATA:
     ("OPENING TRAINING DATA")
@@ -309,13 +299,14 @@ if OPENTRAININGDATA:
     AO_labelsTr_stand = (AO_labelsTr - AO_labels_mean)/AO_labels_std
     dataInTrainTr_stand = (dataInTrainTr - in_mean)/in_std
     del(AO_labelsTr)
-
-#Create Persistence Baseline
-perpred = np.empty(shape = (int(np.size(AO_labelsT))))
-perpred.fill(0)
+    
+dataInTestF = dataInTest_stand.reshape(-1, pf_size, y_size, 1)
+print("PREDICTING")
+PredictedData = new_model.predict([dataInTestF,AO_labelsT_stand])
+PredictedValue = (PredictedData[:,0] * dataOut_std) + dataOut_mean
+PredictedUncertainty = PredictedData[:,1]
 
 if AVERAGECHANGE:
-    #Create Average Evolution Baseline
     print("CALCUALTING AVERAGE CHANGE")
     dataInTrainT, dataOutTrainT, AO_labelsTT, y, pf = OpenAndCombineFiles([1, 2])
     dataInTrainT2, dataOutTrainT2, AO_labelsTT2, y, pf = OpenAndCombineFiles([11, 12])
@@ -325,9 +316,8 @@ if AVERAGECHANGE:
     
     n, bins = HistogramWHeightNormBySample(AO_labelsTT, dataOutTrainT, 100, "Average True AO from Data", "data")
     average_Delta = CreateAverageDeltaArray(bins, n, AO_labelsT)#[:,0]
-    plt.show()
 
-if ODRreg:    
+if LINEARREGRESSION:    
     def f(B, x):
         return B[0]*x + B[1]
     
@@ -338,70 +328,22 @@ if ODRreg:
     myoutput.pprint()
     slope = myoutput.beta[0]
     y_intercept = myoutput.beta[1]
-
-if PITHISTOGRAM:
-    plot_pits(x_val=[dataInTestF,AO_labelsT_stand], onehot_val=dataOutTest_stand, model_shash=new_model)    
     
+    print("slope")
+    print(slope)
+    
+if PITHISTOGRAM:
+    plot_pits(x_val=[dataInTestF,AO_labelsT_stand], onehot_val=dataOutTest_stand, model_shash=new_model)
+ 
+sys.exit()       
 ############################
-#####CALCULATIONS###########
+############################
 ############################
 
 bins = np.arange(26, 52, 2)
 min_bin = 26
 max_bin = 50
 n_bins = (np.size(bins))
-
-if CNN_AE_COUNT: 
-    #Counts how many time the CNN is better than average evolution
-    bins = np.linspace(np.min(AO_labelsT),np.max(AO_labelsT),n_bins) 
-    bins = [27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
-    MAE_array_per_CNN = mae(PredictedValue,dataOutTest)
-    MAE_array_per_SE = mae(average_Delta,dataOutTest)
-    CNN_W = 0
-    CNN_L = 0
-    for pr, pred in enumerate(MAE_array_per_CNN):
-        if MAE_array_per_CNN[pr] > MAE_array_per_SE[pr]:
-            CNN_L = CNN_L + 1
-        if MAE_array_per_CNN[pr] < MAE_array_per_SE[pr]:
-            CNN_W = CNN_W + 1
-    for b, bin_i in enumerate(bins[:-1]):
-        CNN_W2 = 0
-        CNN_L2 = 0
-        bin_data_CNN = MAE_array_per_CNN[(bins[b + 1] > AO_labelsT)&(AO_labelsT >= bins[b])]
-        bin_data_SE = MAE_array_per_SE[(bins[b + 1] > AO_labelsT)&(AO_labelsT >= bins[b])]
-        print(np.shape(bin_data_CNN))
-        for pr, pred in enumerate(bin_data_CNN):
-            if bin_data_CNN[pr] > bin_data_SE[pr]:
-                CNN_L2 = CNN_L2 + 1
-            if bin_data_CNN[pr] < bin_data_SE[pr]:
-                CNN_W2 = CNN_W2 + 1 
-        print("CNN is better than SE " + str(CNN_W2 - CNN_L2))  
-        
-    ###PERCENT CORRECT SIGN
-    PredictedValue_sign = PredictedValue/np.abs(PredictedValue)
-    average_Delta_sign = average_Delta/np.abs(average_Delta)
-    dataOutTest_sign = dataOutTest/np.abs(dataOutTest)
-    CNN_correct_sign = 0
-    SE_correct_sign = 0
-    for pr, pred in enumerate(PredictedValue_sign):
-        if PredictedValue_sign[pr] == dataOutTest_sign[pr]:
-            CNN_correct_sign = CNN_correct_sign + 1
-        if average_Delta_sign[pr] == dataOutTest_sign[pr]:
-            SE_correct_sign = SE_correct_sign + 1
-    for b, bin_i in enumerate(bins[:-1]):
-        CNN_correct_sign2 = 0
-        SE_correct_sign2 = 0
-        bin_data_CNN = PredictedValue_sign[(bins[b + 1] > AO_labelsT)&(AO_labelsT >= bins[b])]
-        bin_data_SE = average_Delta_sign[(bins[b + 1] > AO_labelsT)&(AO_labelsT >= bins[b])]
-        bin_data_truth = dataOutTest_sign[(bins[b + 1] > AO_labelsT)&(AO_labelsT >= bins[b])]
-        for pr, pred in enumerate(bin_data_truth):
-            if bin_data_CNN[pr] == bin_data_truth[pr]:
-                CNN_correct_sign2 = CNN_correct_sign2 + 1
-            if bin_data_SE[pr] == bin_data_truth[pr]:
-                SE_correct_sign2 = SE_correct_sign2 + 1 
-        print("CNN is correct more by " + str(CNN_correct_sign2 - SE_correct_sign2))
-    print(CNN_correct_sign)
-    print(SE_correct_sign)
     
 if SCATTER:
     p.ScatterPlot(PredictedValue, dataOutTest, "Prediction Versus Truth")
@@ -420,7 +362,6 @@ if SCATTERUNCERTAINTY:
     plt.xlabel('actual')
     plt.ylabel('prediction')
     plt.show()
-
     
 if SCATTERCONTOUR:
     p.TwoD_PDF(PredictedValue, dataOutTest)
@@ -487,24 +428,19 @@ if HISTVIOLIN:
     if SAVEFIGURES: 
         plt.savefig(figuresavepath + "Violin.png")           
     plt.show()
-    
-                
+        
 if HISTERROR_BASEDONDELTAAO:
     fig, ax1 = plt.subplots(figsize=(8,5), dpi=400)
     ax1.spines['right'].set_visible(False)
     ax1.spines['top'].set_visible(False)
     MAE_array_per = mae(perpred,dataOutTest)
     p.HistogramWHeightNormBySample(AO_labelsT, MAE_array_per, bins, '', "Persistence", PersistenceColor, 2, False)
-
     MAE_array_per = mae(average_Delta,dataOutTest)
     p.HistogramWHeightNormBySample(AO_labelsT, MAE_array_per, bins, '', "Steady Evolution", SteadyEvolutionColor, 2, False)
-
-    # MAE_array_per = mae(PredictedValue,dataOutTest)
     MAE_array_per = mae(PredictedValue,dataOutTest)
     p.HistogramWHeightNormBySample(AO_labelsT, MAE_array_per, bins, '', "CNN", ModelColor, 2, True)
     plt.title("Average Absolute Error based on Initial Latitude", **title_font)
-    plt.xlabel("Initial Latitude", labelpad=5, **axis_font)
-    
+    plt.xlabel("Initial Latitude", labelpad=5, **axis_font)  
     ax2 = ax1.twinx()
     ax2.set_ylim(0,2.5)
     ax2.set_xlim(24,51)
@@ -516,6 +452,7 @@ if HISTERROR_BASEDONDELTAAO:
     if SAVEFIGURES: 
         plt.savefig(figuresavepath + "BaselinesInitial.png")
     plt.show()
+    
 
 if HISTERROR_BASEDONLABELS:
     bins = np.arange(-10, 10, 2)
@@ -524,15 +461,12 @@ if HISTERROR_BASEDONLABELS:
     ax1.spines['top'].set_visible(False)
     MAE_array_per = mae(perpred,dataOutTest)
     p.HistogramWHeightNormBySample(dataOutTest, MAE_array_per[:], bins, '', "Persistence", PersistenceColor, 2, False)
-
     MAE_array_per = mae(average_Delta,dataOutTest)
     p.HistogramWHeightNormBySample(dataOutTest, MAE_array_per[:], bins, '', "Steady Evolution", SteadyEvolutionColor, 2, False)
-
     MAE_array_per = mae(PredictedValue ,dataOutTest)
     p.HistogramWHeightNormBySample(dataOutTest, MAE_array_per[:], bins, '', "CNN", ModelColor, 2, False)
     plt.title("Average Absolute Error based on Truth", **title_font)
     plt.xlabel("True Latitude", labelpad=5, **axis_font)
-    
     ax2 = ax1.twinx()
     ax2.set_ylim(0,2.5)
     ax2.set_xlim(-11, 11)
@@ -544,17 +478,15 @@ if HISTERROR_BASEDONLABELS:
     if SAVEFIGURES: 
         plt.savefig(figuresavepath + "BaselinesTruth.png")
     plt.show()
-        
+
+    
 if GAUSSIANBLAB:
     print(np.max(AO_labelsT_stand))
     print(np.min(AO_labelsT_stand))
-    
-
     returnedArray = pp.GaussianBlab(.25, new_model, y, pf, 0 , y_size, pf_size, dataOut_mean, dataOut_std, in_mean, in_std, 0)
     # returnedArray = pp.GaussianBlab(.75, new_model, y, pf, 0 , y_size, pf_size, dataOut_mean, dataOut_std, in_mean, in_std, 0)
     # returnedArray = pp.GaussianBlab(.5, new_model, y, pf, 0 , y_size, pf_size, dataOut_mean, dataOut_std, in_mean, in_std, 0)
-    # returnedArray = pp.GaussianBlab(.25, new_model, y, pf, 0 , y_size, pf_size, dataOut_mean, dataOut_std, in_mean, in_std, 0)
-
+    # returnedArray = pp.GaussianBlab(1, new_model, y, pf, 0 , y_size, pf_size, dataOut_mean, dataOut_std, in_mean, in_std, 0)
     if SAVEFIGURES: 
         plt.savefig(figuresavepath + "MovingGaussianBlob.png")
     plt.show()
@@ -680,64 +612,19 @@ if GAUSSIANBLABLINEAR:
     plt.xlim(0,(np.size(anomalies) - 1))
     plt.show()    
 
-if HISTWITHINERROR:
-    errorlist = [0.05, .1, .25, .5, .75, 1]
-    for errorbound in errorlist:
-        plt.figure(figsize=(6.5,6))
-        MAE_array_per = mae(dataOutTest,perpred)
-        data_Below_error = AO_labelsT[MAE_array_per < errorbound]
-        p.Histogram(data_Below_error, 10, "", "Persistence", PersistenceColor, 2)
-    
-        MAE_array_per = mae(dataOutTest,average_Delta)
-        data_Below_error = AO_labelsT[MAE_array_per < errorbound]
-        nS, bins1S, patchesS = p.Histogram(data_Below_error, 10, "", "Steady Evolution", SteadyEvolutionColor, 2)
-        
-        MAE_array_per = mae(dataOutTest,PredictedValue)
-        data_Below_error = AO_labelsT[MAE_array_per < errorbound]
-        print("How much data falls under " + str(errorbound))
-        print(str(np.size(data_Below_error)))
-        nT, bins1T, patchesT = p.Histogram(data_Below_error, 10, "", "CNN", ModelColor, 1)
-        plt.title("How many samples had an error less than " + str(errorbound))
-        plt.show()    
-
 if SAMPLELIST:
     p.CreateSamplePlot(sample_list, dataInTest, dataOutTest, AO_labelsT, PredictedValue, y, pf, Nshift)
-
-if TESTGAUSSIANS:
-    print("TESTING GAUSSIANS")
-    dtdt = np.empty(shape = (pf_size, y_size))
-    label = np.empty(shape=(1))
-    label.fill(0) 
-    
-    LAT = [30, 30, 60, 60]
-    LAT_S = [15, 15, 15, 15]
-    PRES = [1000, 700, 1000, 700]
-    PRES_S = [200, 200,200, 200]
-    Q = [.25, .25, .25, .25]
-
-    for g, gaus in enumerate(LAT):
-        dtdt.fill(0)
-        dtdt = CreateGaussianBlob(dtdt, LAT[g], PRES[g], LAT_S[g], PRES_S[g], Q[g])
-        
-        HEATING_blab_stand1 = (dtdt - in_mean)/ in_std
-        HEATING_blabF1 = HEATING_blab_stand1.reshape(-1, pf_size, y_size, 1)
-    
-        predi = new_model.predict([HEATING_blabF1,label])
-        print("Prediction from gaussian " + str(g))
-        print((predi[:,0] * dataOut_std) + dataOut_mean)
-        print(predi[:,1])
+  
+if SAMPLELISTTRAINING:
+    for sample in sample_list:
+        p.MakeContourPlotColorMesh(dataInTest[sample,:,:],str(sample), y, pf)  
 
 ############################
 #####HEATINGS###############
 ############################ 
-EXPLORE_SINGLE_HEATING_MAGNITUDE = True
-EXPLORE_TWO_HEATING_MAGNITUDE = True 
-TwoHeatingNonlinear = True
-LINEARTWO = True
-TUGOFWAREXP = True
-POLARPATTERNLINE = True
-Doyeon_Kim = True 
-BUTLER2010 = True
+EXPLORE_TWO_HEATING_MAGNITUDE = True  #
+TwoHeatingNonlinear = True #
+BUTLER2010 = True #
 
 def TwoHeatingSmall(y, pf, initloc):
     print("COMPLETING EXPLORE TWO HEATING MAGNITUE")
@@ -765,9 +652,6 @@ def TwoHeatingSmall(y, pf, initloc):
             predi = new_model.predict([HEATING_blabF,label])
             predvalue = predi[:,0]
             HEATING_pred[TH, PH] = (predvalue * dataOut_std) + dataOut_mean
-            # title = "tH: " + str(tropic_heating) + " pH: " + str(polar_heating) + " pred: " + str(HEATING_pred[TH, PH])
-            # print(title)
-            # MakeContourPlot(HEATING_blab, title, y, pf)
             HEATING_uncertainty[TH, PH] = predi[:,1]
  
     Trials_x2 = Trials_x #- (interval_x/2)
@@ -776,20 +660,11 @@ def TwoHeatingSmall(y, pf, initloc):
     
     plt.figure(figsize=(8,2), dpi=600)
     cs = plt.pcolormesh(X, Y, HEATING_pred, cmap=tmap_dis, vmin = -4, vmax = 4)#, vmin = -maxi, vmax = maxi)#, vmin = -4, vmax = 4)
-    # plt.title("Predicted Jet Shift (combined before pred)", **title_font)
-    # plt.colorbar(cs, label = "")
     plt.xticks(**axisTick_font)
     plt.yticks(**axisTick_font)
     plt.xlabel("Polar Anom", **axis_font)
     plt.ylabel("Tropical Anom", **axis_font)
     
-    if ADD_DDC_DATA:
-       f = nc.Dataset("/Users/cconn/Documents/CESM2_2HS/data/Averaged_HeatingFiles/DeltaFromHeating_small.nc",'r') 
-       ddc_heating = f["heatingScenerios"][:,:]
-       x = ddc_heating[:,1] 
-       y = ddc_heating[:,2] 
-       
-       plt.scatter(x, y, c = ddc_heating[:,0], cmap=tmap_dis, vmin = -5, vmax = 5, edgecolors='black', s = 100, linewidth = .2)#, facecolors='none', edgecolors=ddc_heating[:,0])
     if SAVEFIGURES: 
         plt.savefig(figuresavepath + "TwoCompetingHeating.png")
     plt.show()
@@ -797,8 +672,6 @@ def TwoHeatingSmall(y, pf, initloc):
     
     plt.figure(figsize=(8,2), dpi=600)
     cs = plt.pcolormesh(X, Y, HEATING_uncertainty, cmap=tmap_uncertainty_dis, vmin = 0)#, vmin = 0.6, vmax = 1)#, vmin = -maxi, vmax = maxi)#, vmin = -4, vmax = 4)
-    # plt.title("Scynorio Uncertainty", **title_font)
-    # plt.colorbar(cs, label = "")
     plt.xticks(**axisTick_font)
     plt.yticks(**axisTick_font)
     plt.xlabel("Polar Anom", **axis_font)
@@ -814,6 +687,7 @@ Arctic_lat = 90
 Arctic_height = 1000
 Arctic_latSize = 16
 Arcitc_heightSize = 250
+
     
 if EXPLORE_TWO_HEATING_MAGNITUDE:
     heatingField = TwoHeatingSmall(y, pf, 0)
@@ -862,8 +736,6 @@ if TwoHeatingNonlinear:
     
     plt.figure(figsize=(8,2), dpi=600)
     cs = plt.pcolormesh(X, Y, HEATING_added, cmap=tmap_dis, vmin = -4, vmax = 4)#, vmin = -maxi, vmax = maxi)#, vmin = -4, vmax = 4)
-    # plt.title("Predicted jet Shift (combined after pred)", **title_font)
-    # plt.colorbar(cs, label = "")
     plt.xticks(**axisTick_font)
     plt.yticks(**axisTick_font)
     plt.xlabel("Polar Anom", **axis_font)
@@ -873,13 +745,11 @@ if TwoHeatingNonlinear:
     
     plt.figure(figsize=(8,2), dpi=600)
     cs = plt.pcolormesh(X, Y, SUB, cmap=tmap_dis, vmin = -.7, vmax = .7)#, vmin = -maxi, vmax = maxi)#, vmin = -4, vmax = 4)
-    # plt.title("Difference", **title_font)
-    # plt.colorbar(cs, label = "")
     plt.xticks(**axisTick_font)
     plt.yticks(**axisTick_font)
     plt.xlabel("Polar Anom", **axis_font)
     plt.ylabel("Tropical Anom", **axis_font)
-    
+        
 if BUTLER2010:
     print("BUTLER2010")
     anomalies = [.1,.2,.3,.4,.5,.6,.7,.8,.9,1]
@@ -898,8 +768,6 @@ if BUTLER2010:
     for a, anom in enumerate(anomalies):
         dtdt.fill(0)
         dtdt = CreateGaussianBlob(dtdt, lat_loc, pf_loc[0], lat_shape[0], pf_shape[0], anom)
-        # p.MakeContourPlot_outline(dtdt, "Tropical pattern a", y, pf, 'cornflowerblue', [0, .5, .75])
-        # p.MakeContourPlot(dtdt, "Tropical pattern a", y, pf)
         
         HEATING_blab_stand1 = (dtdt - in_mean)/ in_std
         HEATING_blabF1 = HEATING_blab_stand1.reshape(-1, 25, 32, 1)
@@ -911,8 +779,6 @@ if BUTLER2010:
         
         dtdt.fill(0)
         dtdt = CreateGaussianBlob(dtdt, lat_loc, pf_loc[1], lat_shape[1], pf_shape[1], anom)
-        # p.MakeContourPlot_outline(dtdt, "Tropical pattern b", y, pf, 'crimson', [0, .5, .75])
-        # p.MakeContourPlot(dtdt, "Tropical pattern b", y, pf)
         
         HEATING_blab_stand1 = (dtdt - in_mean)/ in_std
         HEATING_blabF1 = HEATING_blab_stand1.reshape(-1, 25, 32, 1)
@@ -924,8 +790,6 @@ if BUTLER2010:
         
         dtdt.fill(0)
         dtdt = CreateGaussianBlob(dtdt, lat_loc, pf_loc[2], lat_shape[2], pf_shape[2], anom)
-        # p.MakeContourPlot_outline(dtdt, "Tropical pattern c", y, pf, 'blueviolet', [0, .5, .75])
-        # p.MakeContourPlot(dtdt, "Tropical pattern c", y, pf)
         
         HEATING_blab_stand1 = (dtdt - in_mean)/ in_std
         HEATING_blabF1 = HEATING_blab_stand1.reshape(-1, 25, 32, 1)
@@ -937,8 +801,6 @@ if BUTLER2010:
         
         dtdt.fill(0)
         dtdt = CreateGaussianBlob(dtdt, lat_loc, pf_loc[3], lat_shape[3], pf_shape[3], anom)
-        # p.MakeContourPlot_outline(dtdt, "Tropical pattern d", y, pf, 'seagreen', [0, .5, .75])
-        # p.MakeContourPlot(dtdt, "Tropical pattern d", y, pf)
         
         HEATING_blab_stand1 = (dtdt - in_mean)/ in_std
         HEATING_blabF1 = HEATING_blab_stand1.reshape(-1, 25, 32, 1)
@@ -946,7 +808,6 @@ if BUTLER2010:
         predi = new_model.predict([HEATING_blabF1,label])
         predictedarray[a, 3] = (predi[:,0] * dataOut_std) + dataOut_mean
         uncertaintyarray[a, 3] = predi[:,1]
-        # sys.exit()
         #************************
     plt.figure(figsize=(8,2), dpi=600)
     plt.axvline(x = 4, color = "black",  alpha=0.3)
@@ -963,5 +824,7 @@ if BUTLER2010:
     plt.yticks(**axisTick_font)
     plt.xlim(0,(np.size(anomalies) - 1))
     plt.show()
+      
 
+        
  
