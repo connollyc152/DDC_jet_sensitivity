@@ -14,7 +14,7 @@ settings = SETTINGS.EXPERIMENTS
 import cmasher as cmr
 tmap = cmr.viola #fusion_r
 
-data_loc = "/Users/cconn/Documents/DDC_jetsensitivity_CNN/CESM_DDC/data"
+data_loc = "CHANGE TO LOCATION OF DATA"
 
 def MakeContourPlot(data, title, y, pf):
     plt.figure(figsize=(7.5,6), dpi=300)
@@ -29,7 +29,6 @@ def MakeContourPlot(data, title, y, pf):
 
 def mae(test, predict):
     return np.mean(np.abs(np.ndarray.flatten(test)-np.ndarray.flatten(predict)))
-
 
 def DeltaAO(AO_data, lag):
     AO_array = []

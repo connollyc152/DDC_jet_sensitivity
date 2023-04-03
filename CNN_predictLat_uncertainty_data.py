@@ -14,7 +14,7 @@ settings = SETTINGS.EXPERIMENTS
 import cmasher as cmr
 tmap = cmr.viola #fusion_r
 
-data_loc = "/Users/cconn/Documents/myPublishedPapers/PAPER_JetResponse_to_dTdt/Code/data/"
+data_loc = "CHANGE TO LOCATION OF DATA"
 
 def MakeContourPlot(data, title, y, pf):
     plt.figure(figsize=(7.5,6), dpi=300)
